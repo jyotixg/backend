@@ -29,5 +29,28 @@ After each learning session/topic completes, **proactively create a new, separat
 - Pushed to GitHub repo **`jyotixg/backend`**, authenticated as the **`jyotixg`** account (a second account alongside `sumanxg` on this machine; credentials kept separate via the username in the remote URL).
 - Commit identity for this repo: `jyotixg <guptajyoti5526@gmail.com>`.
 
+## Learning roadmap (follow this order — do NOT jump ahead)
+The user set this sequence. Teach **one step at a time, in order**. Do not introduce a later topic before its step is reached, even if asked — gently hold the boundary and point back to the current step.
+
+1. Project initialization (npm, Express, folder structure) — ✅ done
+2. Environment variables (dotenv) — ✅ done
+3. PostgreSQL installation and basics — ⬅️ next
+4. Prisma setup and first migration
+5. User model
+6. Registration API
+7. Password hashing (bcrypt)
+8. Login API
+9. JWT generation
+10. Authentication middleware
+11. Protected routes
+12. Authorization (roles)
+13. Refresh tokens
+14. Password reset
+15. Email verification
+16. Security (Helmet, CORS, rate limiting)
+17. Testing with Postman
+18. Deployment
+
 ## Progress log
 - **Day 1:** Project initialization + Express setup (npm init, install Express, basic server + `GET /` route, npm scripts, run/test). Notes: `notes/01-project-initialization-and-express-setup.md`.
+- **Day 2:** Environment variables with dotenv (install dotenv, `.env` + `.gitignore`, `import 'dotenv/config'`, `process.env.PORT`, `.env.example`). Notes: `notes/02-environment-variables-dotenv.md`.
