@@ -35,8 +35,8 @@ The user set this sequence. Teach **one step at a time, in order**. Do not intro
 1. Project initialization (npm, Express, folder structure) — ✅ done
 2. Environment variables (dotenv) — ✅ done
 3. PostgreSQL installation and basics — ✅ done
-4. Prisma setup and first migration — ⬅️ next
-5. User model
+4. Prisma setup and first migration — ✅ done
+5. User model — ⬅️ next (replace the temporary `Note` demo model)
 6. Registration API
 7. Password hashing (bcrypt)
 8. Login API
@@ -55,3 +55,9 @@ The user set this sequence. Teach **one step at a time, in order**. Do not intro
 - **Day 1:** Project initialization + Express setup (npm init, install Express, basic server + `GET /` route, npm scripts, run/test). Notes: `notes/01-project-initialization-and-express-setup.md`.
 - **Day 2:** Environment variables with dotenv (install dotenv, `.env` + `.gitignore`, `import 'dotenv/config'`, `process.env.PORT`, `.env.example`). Notes: `notes/02-environment-variables-dotenv.md`.
 - **Day 3:** PostgreSQL installation & basics (PostgreSQL 18 already installed; reset lost `postgres` password via pg_hba.conf `trust` method; connected with `psql`; learned `\l` `\c` `\dt` `\q`; created `auth_db`; connection-string concept). Password for local dev: `postgres`. Notes: `notes/03-postgresql-installation-and-basics.md`.
+- **Day 4:** Prisma setup & first migration (installed `prisma` + `@prisma/client` **v7.8.0**; `prisma init`; `DATABASE_URL` in `.env`; created a temporary `Note` demo model; ran `prisma migrate dev --name init` → created `Note` + `_prisma_migrations` tables; `prisma generate`). Notes: `notes/04-prisma-setup-and-first-migration.md`.
+
+## Prisma 7 gotchas (this project uses Prisma 7.8.0 — differs from most tutorials)
+- The DB connection **URL is read in `prisma.config.ts`** (`datasource.url = process.env["DATABASE_URL"]`, and it `import "dotenv/config"`), NOT via a `url = env(...)` line in `schema.prisma`. The schema's `datasource db` block only has `provider = "postgresql"`.
+- The generator is the new **`prisma-client`** (not `prisma-client-js`); it outputs **TypeScript** client code to `./generated/prisma` (gitignored). ⚠️ Since this project is plain JS/ESM, when we first `import` the client in code (Step 6-ish), verify the TS-generated client works under Node ESM; if it doesn't, switch the generator to `prisma-client-js` (outputs JS to `node_modules/@prisma/client`) and re-run `prisma generate`.
+- Migrations live in `prisma/migrations/` (these ARE committed). `.env` and `/generated/prisma` are gitignored.
