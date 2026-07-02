@@ -12,10 +12,12 @@ datasource db {
   provider = "postgresql"
 }
 
-// Temporary demo model — just to run our first migration.
-// The real User model comes in Step 5; this will be removed then.
-model Note {
+model User {
   id        Int      @id @default(autoincrement())
-  text      String
+  email     String   @unique
+  password  String
+  name      String?
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
+

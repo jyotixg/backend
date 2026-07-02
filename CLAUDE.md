@@ -36,8 +36,8 @@ The user set this sequence. Teach **one step at a time, in order**. Do not intro
 2. Environment variables (dotenv) — ✅ done
 3. PostgreSQL installation and basics — ✅ done
 4. Prisma setup and first migration — ✅ done
-5. User model — ⬅️ next (replace the temporary `Note` demo model)
-6. Registration API
+5. User model — ✅ done (`Note` demo replaced with real `User` table)
+6. Registration API — ⬅️ next
 7. Password hashing (bcrypt)
 8. Login API
 9. JWT generation
@@ -56,6 +56,7 @@ The user set this sequence. Teach **one step at a time, in order**. Do not intro
 - **Day 2:** Environment variables with dotenv (install dotenv, `.env` + `.gitignore`, `import 'dotenv/config'`, `process.env.PORT`, `.env.example`). Notes: `notes/02-environment-variables-dotenv.md`.
 - **Day 3:** PostgreSQL installation & basics (PostgreSQL 18 already installed; reset lost `postgres` password via pg_hba.conf `trust` method; connected with `psql`; learned `\l` `\c` `\dt` `\q`; created `auth_db`; connection-string concept). Password for local dev: `postgres`. Notes: `notes/03-postgresql-installation-and-basics.md`.
 - **Day 4:** Prisma setup & first migration (installed `prisma` + `@prisma/client` **v7.8.0**; `prisma init`; `DATABASE_URL` in `.env`; created a temporary `Note` demo model; ran `prisma migrate dev --name init` → created `Note` + `_prisma_migrations` tables; `prisma generate`). Notes: `notes/04-prisma-setup-and-first-migration.md`.
+- **Day 5:** User model (replaced `Note` with a real `User` model — `id`, `email @unique`, `password`, `name String?`, `createdAt`, `updatedAt @updatedAt`; migration `add_user_model` dropped `Note` and created `User` with a unique index on email). Notes: `notes/05-user-model.md`. NOTE: `password` is a plain column for now — hashing is Step 7; `role` deferred to Step 12.
 
 ## Prisma 7 gotchas (this project uses Prisma 7.8.0 — differs from most tutorials)
 - The DB connection **URL is read in `prisma.config.ts`** (`datasource.url = process.env["DATABASE_URL"]`, and it `import "dotenv/config"`), NOT via a `url = env(...)` line in `schema.prisma`. The schema's `datasource db` block only has `provider = "postgresql"`.
