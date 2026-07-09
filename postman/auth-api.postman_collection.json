@@ -53,6 +53,34 @@
         "description": "Create a new user. Expects JSON { email, password, name? }. Returns 201 with the user (no password), 400 if fields missing, 409 if email already exists."
       },
       "response": []
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"joy@example.com\",\n  \"password\": \"secret123\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["login"]
+        },
+        "description": "Log in. Expects JSON { email, password }. Returns 200 with user on success, 401 for wrong password or unknown email, 400 if fields missing."
+      },
+      "response": []
     }
   ]
 }

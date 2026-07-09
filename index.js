@@ -46,6 +46,42 @@ app.post('/register', async (req, res) => {
 });
 
 
+app.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    
+    // 1. Validate input
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    // 2. Find the user by email
+    // SQL: SELECT * FROM "User" WHERE email = $1 LIMIT 1;
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // 3. Compare the typed password with the stored hashed password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // 4. Success (a real token comes in Step 9)
+    res.status(200).json({
+      message: 'Login successful',
+      user: { id: user.id, email: user.email, name: user.name },
+    })
+  }
+
+  catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+
+})
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
