@@ -1,0 +1,58 @@
+{
+  "info": {
+    "name": "Auth API",
+    "description": "Collection for the backend auth learning project. Endpoints are added as we build them (roadmap order).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/",
+          "host": ["{{baseUrl}}"],
+          "path": [""]
+        },
+        "description": "Basic server-alive check (GET /)."
+      },
+      "response": []
+    },
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"charlie@example.com\",\n  \"password\": \"secret123\",\n  \"name\": \"Charlie\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["register"]
+        },
+        "description": "Create a new user. Expects JSON { email, password, name? }. Returns 201 with the user (no password), 400 if fields missing, 409 if email already exists."
+      },
+      "response": []
+    }
+  ]
+}

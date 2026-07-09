@@ -37,8 +37,8 @@ The user set this sequence. Teach **one step at a time, in order**. Do not intro
 3. PostgreSQL installation and basics — ✅ done
 4. Prisma setup and first migration — ✅ done
 5. User model — ✅ done (`Note` demo replaced with real `User` table)
-6. Registration API — ⬅️ next
-7. Password hashing (bcrypt)
+6. Registration API — ✅ done (`POST /register` working end-to-end)
+7. Password hashing (bcrypt) — ⬅️ next
 8. Login API
 9. JWT generation
 10. Authentication middleware
@@ -58,8 +58,10 @@ The user set this sequence. Teach **one step at a time, in order**. Do not intro
 - **Day 4:** Prisma setup & first migration (installed `prisma` + `@prisma/client` **v7.8.0**; `prisma init`; `DATABASE_URL` in `.env`; created a temporary `Note` demo model; ran `prisma migrate dev --name init` → created `Note` + `_prisma_migrations` tables; `prisma generate`). Notes: `notes/04-prisma-setup-and-first-migration.md`.
 - **Day 5:** User model (replaced `Note` with a real `User` model — `id`, `email @unique`, `password`, `name String?`, `createdAt`, `updatedAt @updatedAt`; migration `add_user_model` dropped `Note` and created `User` with a unique index on email). Notes: `notes/05-user-model.md`. NOTE: `password` is a plain column for now — hashing is Step 7; `role` deferred to Step 12.
 - **SQL warm-up** (between Day 5 & 6): hands-on CRUD in `psql` against `User` (INSERT/SELECT/WHERE/UPDATE/DELETE, the no-WHERE danger, the double-quote identifier quirk, SQL→Prisma mapping). Notes: `notes/05a-sql-crud-basics.md`. Context: user is weak at SQL and wants to learn it — keep showing raw SQL beside Prisma queries (see memory).
+- **Day 6:** Registration API (`prismaClient.js` shared client w/ Prisma 7 `@prisma/adapter-pg` driver adapter; `express.json()`; `POST /register` with validation → 400, duplicate check → 409, `prisma.user.create` → 201; response omits password). Tested via a Postman collection (`postman/auth-api.postman_collection.json`). Password still PLAIN — hashing is Step 7. Notes: `notes/06-registration-api.md`.
 
 ## Prisma 7 gotchas (this project uses Prisma 7.8.0 — differs from most tutorials)
 - The DB connection **URL is read in `prisma.config.ts`** (`datasource.url = process.env["DATABASE_URL"]`, and it `import "dotenv/config"`), NOT via a `url = env(...)` line in `schema.prisma`. The schema's `datasource db` block only has `provider = "postgresql"`.
-- The generator is the new **`prisma-client`** (not `prisma-client-js`); it outputs **TypeScript** client code to `./generated/prisma` (gitignored). ⚠️ Since this project is plain JS/ESM, when we first `import` the client in code (Step 6-ish), verify the TS-generated client works under Node ESM; if it doesn't, switch the generator to `prisma-client-js` (outputs JS to `node_modules/@prisma/client`) and re-run `prisma generate`.
+- ✅ RESOLVED (Step 6): the default `prisma-client` generator output **TypeScript** (`generated/prisma/*.ts`) which plain Node ESM couldn't import (`ERR_MODULE_NOT_FOUND`). Switched the generator to **`prisma-client-js`** (no `output` line) → it generates JS to `node_modules/@prisma/client`, so `import { PrismaClient } from '@prisma/client'` works. The old `generated/` folder was deleted.
+- ✅ RESOLVED (Step 6): the runtime client threw `PrismaClientInitializationError` on `new PrismaClient()` because Prisma 7 dropped the `datasourceUrl`/`datasources` constructor options and now **requires a driver adapter**. Fix: `npm install @prisma/adapter-pg`, then `new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) })`. See `prismaClient.js`. (The runtime client does NOT read `prisma.config.ts`, so it needs the URL via the adapter.)
 - Migrations live in `prisma/migrations/` (these ARE committed). `.env` and `/generated/prisma` are gitignored.
