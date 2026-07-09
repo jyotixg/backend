@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import prisma from './prismaClient.js';
+import bcrypt from 'bcryptjs';
 
 const app = express();
 app.use(express.json());
@@ -27,11 +28,13 @@ app.post('/register', async (req, res) => {
       return res.status(409).json({ error: 'Email already registered' });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     // 3. Create the new user
     // SQL: INSERT INTO "User" (email, password, name, "updatedAt")
     //      VALUES ($1, $2, $3, NOW()) RETURNING *;
     const user = await prisma.user.create({
-      data: { email, password, name },
+      data: { email, password: hashedPassword, name },
     });
 
     // 4. Respond (never send the password back)

@@ -38,8 +38,8 @@ The user set this sequence. Teach **one step at a time, in order**. Do not intro
 4. Prisma setup and first migration — ✅ done
 5. User model — ✅ done (`Note` demo replaced with real `User` table)
 6. Registration API — ✅ done (`POST /register` working end-to-end)
-7. Password hashing (bcrypt) — ⬅️ next
-8. Login API
+7. Password hashing (bcrypt) — ✅ done (uses `bcryptjs`; register hashes before saving)
+8. Login API — ⬅️ next
 9. JWT generation
 10. Authentication middleware
 11. Protected routes
@@ -58,7 +58,8 @@ The user set this sequence. Teach **one step at a time, in order**. Do not intro
 - **Day 4:** Prisma setup & first migration (installed `prisma` + `@prisma/client` **v7.8.0**; `prisma init`; `DATABASE_URL` in `.env`; created a temporary `Note` demo model; ran `prisma migrate dev --name init` → created `Note` + `_prisma_migrations` tables; `prisma generate`). Notes: `notes/04-prisma-setup-and-first-migration.md`.
 - **Day 5:** User model (replaced `Note` with a real `User` model — `id`, `email @unique`, `password`, `name String?`, `createdAt`, `updatedAt @updatedAt`; migration `add_user_model` dropped `Note` and created `User` with a unique index on email). Notes: `notes/05-user-model.md`. NOTE: `password` is a plain column for now — hashing is Step 7; `role` deferred to Step 12.
 - **SQL warm-up** (between Day 5 & 6): hands-on CRUD in `psql` against `User` (INSERT/SELECT/WHERE/UPDATE/DELETE, the no-WHERE danger, the double-quote identifier quirk, SQL→Prisma mapping). Notes: `notes/05a-sql-crud-basics.md`. Context: user is weak at SQL and wants to learn it — keep showing raw SQL beside Prisma queries (see memory).
-- **Day 6:** Registration API (`prismaClient.js` shared client w/ Prisma 7 `@prisma/adapter-pg` driver adapter; `express.json()`; `POST /register` with validation → 400, duplicate check → 409, `prisma.user.create` → 201; response omits password). Tested via a Postman collection (`postman/auth-api.postman_collection.json`). Password still PLAIN — hashing is Step 7. Notes: `notes/06-registration-api.md`.
+- **Day 6:** Registration API (`prismaClient.js` shared client w/ Prisma 7 `@prisma/adapter-pg` driver adapter; `express.json()`; `POST /register` with validation → 400, duplicate check → 409, `prisma.user.create` → 201; response omits password). Tested via a Postman collection (`postman/auth-api.postman_collection.json`). Notes: `notes/06-registration-api.md`.
+- **Day 7:** Password hashing (installed **`bcryptjs`** — pure JS, avoids native build issues on Node 24/Windows; register now does `bcrypt.hash(password, 10)` and stores the hash). Verified: new user `joy` has a `$2b$10$...` hash; old rows (alice/charlie) still plain. Login-side `bcrypt.compare` is Step 8. Notes: `notes/07-password-hashing-bcrypt.md`.
 
 ## Prisma 7 gotchas (this project uses Prisma 7.8.0 — differs from most tutorials)
 - The DB connection **URL is read in `prisma.config.ts`** (`datasource.url = process.env["DATABASE_URL"]`, and it `import "dotenv/config"`), NOT via a `url = env(...)` line in `schema.prisma`. The schema's `datasource db` block only has `provider = "postgresql"`.
