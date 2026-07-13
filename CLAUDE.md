@@ -40,8 +40,8 @@ The user set this sequence. Teach **one step at a time, in order**. Do not intro
 6. Registration API — ✅ done (`POST /register` working end-to-end)
 7. Password hashing (bcrypt) — ✅ done (uses `bcryptjs`; register hashes before saving)
 8. Login API — ✅ done (`POST /login` verifies with `bcrypt.compare`)
-9. JWT generation — ⬅️ next
-10. Authentication middleware
+9. JWT generation — ✅ done (`/login` issues a signed JWT with `jsonwebtoken`)
+10. Authentication middleware — ⬅️ next
 11. Protected routes
 12. Authorization (roles)
 13. Refresh tokens
@@ -61,6 +61,7 @@ The user set this sequence. Teach **one step at a time, in order**. Do not intro
 - **Day 6:** Registration API (`prismaClient.js` shared client w/ Prisma 7 `@prisma/adapter-pg` driver adapter; `express.json()`; `POST /register` with validation → 400, duplicate check → 409, `prisma.user.create` → 201; response omits password). Tested via a Postman collection (`postman/auth-api.postman_collection.json`). Notes: `notes/06-registration-api.md`.
 - **Day 7:** Password hashing (installed **`bcryptjs`** — pure JS, avoids native build issues on Node 24/Windows; register now does `bcrypt.hash(password, 10)` and stores the hash). Verified: new user `joy` has a `$2b$10$...` hash; old rows (alice/charlie) still plain. Login-side `bcrypt.compare` is Step 8. Notes: `notes/07-password-hashing-bcrypt.md`.
 - **Day 8:** Login API (`POST /login` — find user by email, `bcrypt.compare(password, user.password)`; 200 on success, 401 for wrong password OR unknown email with the SAME message for security, 400 if missing). Added Login to the Postman collection. Old plain-text rows can't log in (not valid bcrypt hashes). No token yet — JWT is Step 9. Notes: `notes/08-login-api.md`.
+- **Day 9:** JWT generation (installed `jsonwebtoken`; `JWT_SECRET` in `.env` via `crypto.randomBytes(32).hex`; `/login` now returns `jwt.sign({ userId }, secret, { expiresIn: '1h' })`). Register stays `201` + user (no token); login issues the token. Decoded a real token: header `HS256`, payload `{userId,iat,exp}` readable (base64, not encrypted), signature is the tamper-proof stamp. Verifying tokens is Step 10. Notes: `notes/09-jwt-generation.md`.
 
 ## Prisma 7 gotchas (this project uses Prisma 7.8.0 — differs from most tutorials)
 - The DB connection **URL is read in `prisma.config.ts`** (`datasource.url = process.env["DATABASE_URL"]`, and it `import "dotenv/config"`), NOT via a `url = env(...)` line in `schema.prisma`. The schema's `datasource db` block only has `provider = "postgresql"`.

@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import prisma from './prismaClient.js';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const app = express();
 app.use(express.json());
@@ -39,6 +40,7 @@ app.post('/register', async (req, res) => {
 
     // 4. Respond (never send the password back)
     res.status(201).json({ id: user.id, email: user.email, name: user.name });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Something went wrong' });
@@ -50,7 +52,7 @@ app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    
+
     // 1. Validate input
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
@@ -69,11 +71,19 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // 4. Success (a real token comes in Step 9)
+    // 4. Create a JWT and return it
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
     res.status(200).json({
       message: 'Login successful',
+      token,
       user: { id: user.id, email: user.email, name: user.name },
-    })
+    });
+
   }
 
   catch (err) {
