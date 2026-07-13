@@ -3,6 +3,7 @@ import express from 'express';
 import prisma from './prismaClient.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { authenticate } from './authMiddleware.js';
 
 const app = express();
 app.use(express.json());
@@ -92,6 +93,18 @@ app.post('/login', async (req, res) => {
   }
 
 })
+
+
+// Protected: only works with a valid token
+app.get('/me', authenticate, async (req, res) => {
+  // req.userId was set by the middleware
+  const user = await prisma.user.findUnique({
+    where: { id: req.userId },
+    select: { id: true, email: true, name: true, createdAt: true }, // never select password
+  });
+  res.json(user);
+});
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

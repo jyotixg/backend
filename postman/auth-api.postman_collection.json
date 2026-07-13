@@ -9,6 +9,11 @@
       "key": "baseUrl",
       "value": "http://localhost:3000",
       "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -79,6 +84,30 @@
           "path": ["login"]
         },
         "description": "Log in. Expects JSON { email, password }. Returns 200 with user on success, 401 for wrong password or unknown email, 400 if fields missing."
+      },
+      "response": []
+    },
+    {
+      "name": "Current user (/me)",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["me"]
+        },
+        "description": "Protected route. Requires header 'Authorization: Bearer <token>'. Returns the logged-in user, or 401 if the token is missing/invalid/expired. Set the collection's {{token}} variable (or paste a token in the Authorization tab) after logging in."
       },
       "response": []
     }
