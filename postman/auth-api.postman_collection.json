@@ -148,6 +148,30 @@
         "description": "Protected. Updates the logged-in user's own profile (name). Requires a valid Bearer token. Uses req.userId from the token, so a user can only edit their own record."
       },
       "response": []
+    },
+    {
+      "name": "Admin: list users",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/admin/users",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "users"]
+        },
+        "description": "Admin-only. Requires a valid Bearer token whose user has role 'admin'. Returns 200 + all users for admins, 403 for non-admins, 401 if no/invalid token. Note: role is baked into the token at login, so after changing a user's role you must log in again to get a token with the new role."
+      },
+      "response": []
     }
   ]
 }

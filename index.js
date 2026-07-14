@@ -3,7 +3,7 @@ import express from 'express';
 import prisma from './prismaClient.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { authenticate } from './authMiddleware.js';
+import { authenticate, authorize } from './authMiddleware.js';
 
 const app = express();
 app.use(express.json());
@@ -74,7 +74,7 @@ app.post('/login', async (req, res) => {
 
     // 4. Create a JWT and return it
     const token = jwt.sign(
-      { userId: user.id },
+      { userId: user.id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
@@ -124,6 +124,13 @@ app.patch('/me', authenticate, async (req, res) => {
   }
 });
 
+// Admin only: list all users
+app.get('/admin/users', authenticate, authorize('admin'), async (req, res) => {
+  const users = await prisma.user.findMany({
+    select: { id: true, email: true, name: true, role: true },
+  });
+  res.json(users);
+});
 
 
 app.listen(PORT, () => {

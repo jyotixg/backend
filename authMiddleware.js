@@ -19,11 +19,22 @@ export function authenticate(req, res, next) {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         console.log({decoded})
         req.userId = decoded.userId;   // attach the user id for the route to use
+        req.userRole = decoded.role;   
         console.log({userid: req.userId});
         next();                         // ✅ let the request continue
     } catch (err) {
         return res.status(401).json({ error: 'Invalid or expired token' });
     }
 
+}
+
+// Usage: authorize('admin')  or  authorize('admin', 'moderator')
+export function authorize(...allowedRoles) {
+  return (req, res, next) => {
+    if (!allowedRoles.includes(req.userRole)) {
+      return res.status(403).json({ error: 'Forbidden: insufficient permissions' });
+    }
+    next();
+  };
 }
 

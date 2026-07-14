@@ -43,8 +43,8 @@ The user set this sequence. Teach **one step at a time, in order**. Do not intro
 9. JWT generation — ✅ done (`/login` issues a signed JWT with `jsonwebtoken`)
 10. Authentication middleware — ✅ done (`authMiddleware.js` verifies Bearer token, sets `req.userId`)
 11. Protected routes — ✅ done (`GET /me`, `PATCH /me` use `authenticate` + `req.userId`)
-12. Authorization (roles) — ⬅️ next
-13. Refresh tokens
+12. Authorization (roles) — ✅ done (`role` field; `authorize(...roles)` middleware; admin-only `GET /admin/users`)
+13. Refresh tokens — ⬅️ next
 14. Password reset
 15. Email verification
 16. Security (Helmet, CORS, rate limiting)
@@ -64,9 +64,11 @@ The user set this sequence. Teach **one step at a time, in order**. Do not intro
 - **Day 9:** JWT generation (installed `jsonwebtoken`; `JWT_SECRET` in `.env` via `crypto.randomBytes(32).hex`; `/login` now returns `jwt.sign({ userId }, secret, { expiresIn: '1h' })`). Register stays `201` + user (no token); login issues the token. Decoded a real token: header `HS256`, payload `{userId,iat,exp}` readable (base64, not encrypted), signature is the tamper-proof stamp. Verifying tokens is Step 10. Notes: `notes/09-jwt-generation.md`.
 - **Day 10:** Authentication middleware (`authMiddleware.js` exports `authenticate` — reads `Authorization: Bearer <token>`, `jwt.verify`, sets `req.userId`, calls `next()`; 401 if missing/invalid/expired). Tested on a protected `GET /me` route (uses `req.userId`, Prisma `select` to exclude password). Added a `/me` request + `{{token}}` var to the Postman collection. Notes: `notes/10-authentication-middleware.md`.
 - **Day 11:** Protected routes (public vs protected; security principle: use `req.userId` from the token, never a client-supplied id). Added `PATCH /me` to update the logged-in user's own profile via `prisma.user.update` (where/data/select). Covered PATCH vs PUT and `$1/$2` SQL placeholders (SQL-injection defense). Added an Update-profile request to the Postman collection. Notes: `notes/11-protected-routes.md`.
+- **Day 12:** Authorization/roles (`role String @default("user")` + migration; login embeds `role` in JWT; `authenticate` sets `req.userRole`; new `authorize(...roles)` factory middleware → 403 if role not allowed; admin-only `GET /admin/users` via `authenticate, authorize('admin')`). Promoted Joy to admin with SQL. Debugged a stale-Prisma-client bug (role missing from query results until `prisma generate` + server restart). Added Admin request to Postman collection. Notes: `notes/12-authorization-roles.md`.
 
 ## Prisma 7 gotchas (this project uses Prisma 7.8.0 — differs from most tutorials)
 - The DB connection **URL is read in `prisma.config.ts`** (`datasource.url = process.env["DATABASE_URL"]`, and it `import "dotenv/config"`), NOT via a `url = env(...)` line in `schema.prisma`. The schema's `datasource db` block only has `provider = "postgresql"`.
 - ✅ RESOLVED (Step 6): the default `prisma-client` generator output **TypeScript** (`generated/prisma/*.ts`) which plain Node ESM couldn't import (`ERR_MODULE_NOT_FOUND`). Switched the generator to **`prisma-client-js`** (no `output` line) → it generates JS to `node_modules/@prisma/client`, so `import { PrismaClient } from '@prisma/client'` works. The old `generated/` folder was deleted.
 - ✅ RESOLVED (Step 6): the runtime client threw `PrismaClientInitializationError` on `new PrismaClient()` because Prisma 7 dropped the `datasourceUrl`/`datasources` constructor options and now **requires a driver adapter**. Fix: `npm install @prisma/adapter-pg`, then `new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) })`. See `prismaClient.js`. (The runtime client does NOT read `prisma.config.ts`, so it needs the URL via the adapter.)
 - Migrations live in `prisma/migrations/` (these ARE committed). `.env` and `/generated/prisma` are gitignored.
+- ⚠️ WORKFLOW (bit us in Step 12): `prisma migrate dev` updates the DATABASE but does NOT auto-regenerate the client here. After ANY schema change: `migrate dev` → **`npx prisma generate`** → **restart the server** (`node --watch` doesn't restart when only the client in `node_modules` changes). Symptom of skipping it: `prisma.user.findX` returns objects missing the new field (e.g. `user.role` was `undefined`).
