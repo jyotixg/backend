@@ -42,8 +42,8 @@ The user set this sequence. Teach **one step at a time, in order**. Do not intro
 8. Login API — ✅ done (`POST /login` verifies with `bcrypt.compare`)
 9. JWT generation — ✅ done (`/login` issues a signed JWT with `jsonwebtoken`)
 10. Authentication middleware — ✅ done (`authMiddleware.js` verifies Bearer token, sets `req.userId`)
-11. Protected routes — ⬅️ next
-12. Authorization (roles)
+11. Protected routes — ✅ done (`GET /me`, `PATCH /me` use `authenticate` + `req.userId`)
+12. Authorization (roles) — ⬅️ next
 13. Refresh tokens
 14. Password reset
 15. Email verification
@@ -63,6 +63,7 @@ The user set this sequence. Teach **one step at a time, in order**. Do not intro
 - **Day 8:** Login API (`POST /login` — find user by email, `bcrypt.compare(password, user.password)`; 200 on success, 401 for wrong password OR unknown email with the SAME message for security, 400 if missing). Added Login to the Postman collection. Old plain-text rows can't log in (not valid bcrypt hashes). No token yet — JWT is Step 9. Notes: `notes/08-login-api.md`.
 - **Day 9:** JWT generation (installed `jsonwebtoken`; `JWT_SECRET` in `.env` via `crypto.randomBytes(32).hex`; `/login` now returns `jwt.sign({ userId }, secret, { expiresIn: '1h' })`). Register stays `201` + user (no token); login issues the token. Decoded a real token: header `HS256`, payload `{userId,iat,exp}` readable (base64, not encrypted), signature is the tamper-proof stamp. Verifying tokens is Step 10. Notes: `notes/09-jwt-generation.md`.
 - **Day 10:** Authentication middleware (`authMiddleware.js` exports `authenticate` — reads `Authorization: Bearer <token>`, `jwt.verify`, sets `req.userId`, calls `next()`; 401 if missing/invalid/expired). Tested on a protected `GET /me` route (uses `req.userId`, Prisma `select` to exclude password). Added a `/me` request + `{{token}}` var to the Postman collection. Notes: `notes/10-authentication-middleware.md`.
+- **Day 11:** Protected routes (public vs protected; security principle: use `req.userId` from the token, never a client-supplied id). Added `PATCH /me` to update the logged-in user's own profile via `prisma.user.update` (where/data/select). Covered PATCH vs PUT and `$1/$2` SQL placeholders (SQL-injection defense). Added an Update-profile request to the Postman collection. Notes: `notes/11-protected-routes.md`.
 
 ## Prisma 7 gotchas (this project uses Prisma 7.8.0 — differs from most tutorials)
 - The DB connection **URL is read in `prisma.config.ts`** (`datasource.url = process.env["DATABASE_URL"]`, and it `import "dotenv/config"`), NOT via a `url = env(...)` line in `schema.prisma`. The schema's `datasource db` block only has `provider = "postgresql"`.

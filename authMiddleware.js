@@ -17,6 +17,7 @@ export function authenticate(req, res, next) {
     // 4. Verify it
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log({decoded})
         req.userId = decoded.userId;   // attach the user id for the route to use
         console.log({userid: req.userId});
         next();                         // ✅ let the request continue

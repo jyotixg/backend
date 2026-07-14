@@ -105,6 +105,26 @@ app.get('/me', authenticate, async (req, res) => {
   res.json(user);
 });
 
+// Protected: update the logged-in user's own profile
+app.patch('/me', authenticate, async (req, res) => {
+  try {
+    const { name } = req.body;
+
+    // SQL: UPDATE "User" SET name = $1, "updatedAt" = NOW() WHERE id = $2 RETURNING id, email, name;
+    const updated = await prisma.user.update({
+      where: { id: req.userId },
+      data: { name },
+      select: { id: true, email: true, name: true },
+    });
+
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+});
+
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

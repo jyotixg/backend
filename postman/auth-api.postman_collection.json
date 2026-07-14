@@ -110,6 +110,44 @@
         "description": "Protected route. Requires header 'Authorization: Bearer <token>'. Returns the logged-in user, or 401 if the token is missing/invalid/expired. Set the collection's {{token}} variable (or paste a token in the Authorization tab) after logging in."
       },
       "response": []
+    },
+    {
+      "name": "Update profile (/me)",
+      "request": {
+        "method": "PATCH",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Joy Updated\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["me"]
+        },
+        "description": "Protected. Updates the logged-in user's own profile (name). Requires a valid Bearer token. Uses req.userId from the token, so a user can only edit their own record."
+      },
+      "response": []
     }
   ]
 }
