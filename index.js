@@ -72,18 +72,26 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // 4. Create a JWT and return it
-    const token = jwt.sign(
+    // 4. Create access + refresh tokens
+    const accessToken = jwt.sign(
       { userId: user.id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '15m' }              // short-lived
+    );
+
+    const refreshToken = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_REFRESH_SECRET,   // different secret
+      { expiresIn: '7d' }               // long-lived
     );
 
     res.status(200).json({
       message: 'Login successful',
-      token,
+      accessToken,
+      refreshToken,
       user: { id: user.id, email: user.email, name: user.name },
     });
+
 
   }
 
@@ -130,6 +138,44 @@ app.get('/admin/users', authenticate, authorize('admin'), async (req, res) => {
     select: { id: true, email: true, name: true, role: true },
   });
   res.json(users);
+});
+
+// Exchange a valid refresh token for a new access token
+app.post('/refresh', async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    // 1. Must provide a refresh token
+    if (!refreshToken) {
+      return res.status(401).json({ error: 'No refresh token provided' });
+    }
+
+    // 2. Verify it with the REFRESH secret (not the access secret!)
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    } catch (err) {
+      return res.status(401).json({ error: 'Invalid or expired refresh token' });
+    }
+
+    // 3. Look up the user (refresh token only carries userId)
+    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+    if (!user) {
+      return res.status(401).json({ error: 'User no longer exists' });
+    }
+
+    // 4. Issue a fresh access token (with the user's CURRENT role)
+    const accessToken = jwt.sign(
+      { userId: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    res.json({ accessToken });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong' });
+  }
 });
 
 

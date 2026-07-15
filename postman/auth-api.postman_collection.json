@@ -172,6 +172,34 @@
         "description": "Admin-only. Requires a valid Bearer token whose user has role 'admin'. Returns 200 + all users for admins, 403 for non-admins, 401 if no/invalid token. Note: role is baked into the token at login, so after changing a user's role you must log in again to get a token with the new role."
       },
       "response": []
+    },
+    {
+      "name": "Refresh access token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"refreshToken\": \"PASTE_REFRESH_TOKEN_HERE\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/refresh",
+          "host": ["{{baseUrl}}"],
+          "path": ["refresh"]
+        },
+        "description": "Exchange a valid refresh token for a new access token. Body: { refreshToken }. Returns 200 + { accessToken } if the refresh token is valid, 401 if missing/invalid/expired."
+      },
+      "response": []
     }
   ]
 }
