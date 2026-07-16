@@ -200,6 +200,62 @@
         "description": "Exchange a valid refresh token for a new access token. Body: { refreshToken }. Returns 200 + { accessToken } if the refresh token is valid, 401 if missing/invalid/expired."
       },
       "response": []
+    },
+    {
+      "name": "Forgot password",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"joy@example.com\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/forgot-password",
+          "host": ["{{baseUrl}}"],
+          "path": ["forgot-password"]
+        },
+        "description": "Step 1 of reset. Body: { email }. Generates a reset token (1h expiry) and saves it on the user. Always returns the same message (doesn't reveal if the email exists). For now also returns resetToken for testing (will be emailed in Step 15)."
+      },
+      "response": []
+    },
+    {
+      "name": "Reset password",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"resetToken\": \"PASTE_RESET_TOKEN_HERE\",\n  \"newPassword\": \"newpass123\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/reset-password",
+          "host": ["{{baseUrl}}"],
+          "path": ["reset-password"]
+        },
+        "description": "Step 2 of reset. Body: { resetToken, newPassword }. Verifies the token matches and hasn't expired, hashes the new password, saves it, and clears the token (one-time use). Returns 200 on success, 400 if the token is invalid/expired/missing."
+      },
+      "response": []
     }
   ]
 }

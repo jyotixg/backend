@@ -4,6 +4,7 @@ import prisma from './prismaClient.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { authenticate, authorize } from './authMiddleware.js';
+import crypto from 'crypto';
 
 const app = express();
 app.use(express.json());
@@ -177,6 +178,83 @@ app.post('/refresh', async (req, res) => {
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
+
+// Step 1 of reset: user requests a reset token
+app.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    // Security: respond identically whether or not the email exists
+    if (!user) {
+      return res.json({ message: 'If that email is registered, a reset link has been sent' });
+    }
+
+    // Generate a secure random token + 1-hour expiry
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // now + 1 hour
+
+    // Save them on the user's row
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { resetToken, resetTokenExpiry },
+    });
+
+    // ⚠️ Normally you'd EMAIL this token (Step 15). For now we return it so we can test.
+    res.json({
+      message: 'If that email is registered, a reset link has been sent',
+      resetToken, // TEMPORARY — remove once email is implemented
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+});
+
+// Step 2 of reset: user submits the token + a new password
+app.post('/reset-password', async (req, res) => {
+  try {
+    const { resetToken, newPassword } = req.body;
+    if (!resetToken || !newPassword) {
+      return res.status(400).json({ error: 'Reset token and new password are required' });
+    }
+
+    // Find a user whose token matches AND hasn't expired
+    // SQL: SELECT * FROM "User" WHERE "resetToken" = $1 AND "resetTokenExpiry" > NOW() LIMIT 1;
+    const user = await prisma.user.findFirst({
+      where: {
+        resetToken,
+        resetTokenExpiry: { gt: new Date() },
+      },
+    });
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+
+    // Hash the new password (same as registration — never store plain text)
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Set the new password and CLEAR the token (one-time use)
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null,
+      },
+    });
+
+    res.json({ message: 'Password reset successful' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+});
+
 
 
 app.listen(PORT, () => {

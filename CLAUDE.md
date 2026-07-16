@@ -45,8 +45,8 @@ The user set this sequence. Teach **one step at a time, in order**. Do not intro
 11. Protected routes — ✅ done (`GET /me`, `PATCH /me` use `authenticate` + `req.userId`)
 12. Authorization (roles) — ✅ done (`role` field; `authorize(...roles)` middleware; admin-only `GET /admin/users`)
 13. Refresh tokens — ✅ done (access 15m + refresh 7d, separate secrets, `POST /refresh`)
-14. Password reset — ⬅️ next
-15. Email verification
+14. Password reset — ✅ done (`resetToken`+`resetTokenExpiry`; `POST /forgot-password` + `POST /reset-password`; single-use, 1h expiry)
+15. Email verification — ⬅️ next
 16. Security (Helmet, CORS, rate limiting)
 17. Testing with Postman
 18. Deployment
@@ -66,6 +66,7 @@ The user set this sequence. Teach **one step at a time, in order**. Do not intro
 - **Day 11:** Protected routes (public vs protected; security principle: use `req.userId` from the token, never a client-supplied id). Added `PATCH /me` to update the logged-in user's own profile via `prisma.user.update` (where/data/select). Covered PATCH vs PUT and `$1/$2` SQL placeholders (SQL-injection defense). Added an Update-profile request to the Postman collection. Notes: `notes/11-protected-routes.md`.
 - **Day 12:** Authorization/roles (`role String @default("user")` + migration; login embeds `role` in JWT; `authenticate` sets `req.userRole`; new `authorize(...roles)` factory middleware → 403 if role not allowed; admin-only `GET /admin/users` via `authenticate, authorize('admin')`). Promoted Joy to admin with SQL. Debugged a stale-Prisma-client bug (role missing from query results until `prisma generate` + server restart). Added Admin request to Postman collection. Notes: `notes/12-authorization-roles.md`.
 - **Day 13:** Refresh tokens (access 15m via `JWT_SECRET` + refresh 7d via new `JWT_REFRESH_SECRET`; login returns both `accessToken`+`refreshToken`; `POST /refresh` verifies refresh token, re-fetches user for current role, issues new access token). Discussed client-side reactive-on-401 trigger, stateless-vs-DB-stored (revocation) trade-off, and two-layer try/catch. Postman gotcha: body must be raw+**JSON** (Content-Type) with double quotes or `req.body` is undefined. Added Refresh request to Postman collection. Notes: `notes/13-refresh-tokens.md`.
+- **Day 14:** Password reset (added `resetToken String?` + `resetTokenExpiry DateTime?` to User + migration; `POST /forgot-password` generates a `crypto.randomBytes` token w/ 1h expiry, same-message security, returns token TEMPORARILY until email in Step 15; `POST /reset-password` uses `findFirst` + `{ gt: new Date() }` to check token+expiry, `bcrypt.hash`es new password, clears token to null for one-time use). New Prisma concepts: `findFirst` vs `findUnique`, filter operators (`gt`). Added Forgot/Reset requests to Postman collection. Notes: `notes/14-password-reset.md`.
 
 ## Prisma 7 gotchas (this project uses Prisma 7.8.0 — differs from most tutorials)
 - The DB connection **URL is read in `prisma.config.ts`** (`datasource.url = process.env["DATABASE_URL"]`, and it `import "dotenv/config"`), NOT via a `url = env(...)` line in `schema.prisma`. The schema's `datasource db` block only has `provider = "postgresql"`.
