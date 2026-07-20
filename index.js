@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { authenticate, authorize } from './authMiddleware.js';
 import crypto from 'crypto';
+import { sendEmail } from './mailer.js';
 
 const app = express();
 app.use(express.json());
@@ -34,14 +35,29 @@ app.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // 3. Create the new user
-    // SQL: INSERT INTO "User" (email, password, name, "updatedAt")
-    //      VALUES ($1, $2, $3, NOW()) RETURNING *;
+    // Generate a verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+
     const user = await prisma.user.create({
-      data: { email, password: hashedPassword, name },
+      data: { email, password: hashedPassword, name, verificationToken },
     });
 
-    // 4. Respond (never send the password back)
-    res.status(201).json({ id: user.id, email: user.email, name: user.name });
+    // Build a verification link and email it
+    const verifyUrl = `http://localhost:${process.env.PORT || 3000}/verify-email?token=${verificationToken}`;
+    await sendEmail({
+      to: email,
+      subject: 'Verify your email',
+      html: `<p>Welcome! Please verify your email by clicking the link below:</p>
+             <a href="${verifyUrl}">${verifyUrl}</a>`,
+    });
+
+    res.status(201).json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      message: 'Registered! Check your email to verify your account.',
+    });
+
 
   } catch (err) {
     console.error(err);
@@ -72,6 +88,12 @@ app.post('/login', async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
+
+    // Block login until the email is verified
+    if (!user.isVerified) {
+      return res.status(403).json({ error: 'Please verify your email before logging in' });
+    }
+
 
     // 4. Create access + refresh tokens
     const accessToken = jwt.sign(
@@ -204,11 +226,18 @@ app.post('/forgot-password', async (req, res) => {
       data: { resetToken, resetTokenExpiry },
     });
 
-    // ⚠️ Normally you'd EMAIL this token (Step 15). For now we return it so we can test.
-    res.json({
-      message: 'If that email is registered, a reset link has been sent',
-      resetToken, // TEMPORARY — remove once email is implemented
+    // Email the reset link instead of returning the token
+    const resetUrl = `http://localhost:${process.env.PORT || 3000}/reset-password?token=${resetToken}`;
+    await sendEmail({
+      to: email,
+      subject: 'Reset your password',
+      html: `<p>You requested a password reset. Use this token (valid 1 hour):</p>
+             <p><b>${resetToken}</b></p>
+             <p>Or open: <a href="${resetUrl}">${resetUrl}</a></p>`,
     });
+
+    res.json({ message: 'If that email is registered, a reset link has been sent' });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Something went wrong' });
@@ -255,6 +284,30 @@ app.post('/reset-password', async (req, res) => {
   }
 });
 
+// User clicks the emailed link → verify their email
+app.get('/verify-email', async (req, res) => {
+  try {
+    const { token } = req.query;   // from the URL ?token=...
+    if (!token) {
+      return res.status(400).json({ error: 'Verification token is required' });
+    }
+
+    const user = await prisma.user.findFirst({ where: { verificationToken: token } });
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid verification token' });
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { isVerified: true, verificationToken: null },  // mark verified, clear token
+    });
+
+    res.json({ message: 'Email verified successfully! You can now log in.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+});
 
 
 app.listen(PORT, () => {
