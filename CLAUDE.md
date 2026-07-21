@@ -47,8 +47,8 @@ The user set this sequence. Teach **one step at a time, in order**. Do not intro
 13. Refresh tokens — ✅ done (access 15m + refresh 7d, separate secrets, `POST /refresh`)
 14. Password reset — ✅ done (`resetToken`+`resetTokenExpiry`; `POST /forgot-password` + `POST /reset-password`; single-use, 1h expiry)
 15. Email verification — ✅ done (Nodemailer+Ethereal; `isVerified`+`verificationToken`; register emails link; `GET /verify-email`; login blocked if unverified; forgot-password now emails the token)
-16. Security (Helmet, CORS, rate limiting) — ⬅️ next
-17. Testing with Postman
+16. Security (Helmet, CORS, rate limiting) — ✅ done (`helmet()`, `cors()`, global + strict `/login` `express-rate-limit`)
+17. Testing with Postman — ⬅️ next
 18. Deployment
 
 ## Progress log
@@ -68,6 +68,7 @@ The user set this sequence. Teach **one step at a time, in order**. Do not intro
 - **Day 13:** Refresh tokens (access 15m via `JWT_SECRET` + refresh 7d via new `JWT_REFRESH_SECRET`; login returns both `accessToken`+`refreshToken`; `POST /refresh` verifies refresh token, re-fetches user for current role, issues new access token). Discussed client-side reactive-on-401 trigger, stateless-vs-DB-stored (revocation) trade-off, and two-layer try/catch. Postman gotcha: body must be raw+**JSON** (Content-Type) with double quotes or `req.body` is undefined. Added Refresh request to Postman collection. Notes: `notes/13-refresh-tokens.md`.
 - **Day 14:** Password reset (added `resetToken String?` + `resetTokenExpiry DateTime?` to User + migration; `POST /forgot-password` generates a `crypto.randomBytes` token w/ 1h expiry, same-message security, returns token TEMPORARILY until email in Step 15; `POST /reset-password` uses `findFirst` + `{ gt: new Date() }` to check token+expiry, `bcrypt.hash`es new password, clears token to null for one-time use). New Prisma concepts: `findFirst` vs `findUnique`, filter operators (`gt`). Added Forgot/Reset requests to Postman collection. Notes: `notes/14-password-reset.md`.
 - **Day 15:** Email verification (installed **`nodemailer`**; `mailer.js` uses an **Ethereal** test inbox + `sendEmail({to,subject,html})` that logs a preview URL; added `isVerified Boolean @default(false)` + `verificationToken String?` to User + migration). Register now generates a verification token, saves it, and emails a `GET /verify-email?token=...` link (uses `req.query`); verify sets `isVerified: true` + clears token. Login now blocked with 403 if `!isVerified` (checked AFTER password). Circled back: `/forgot-password` now EMAILS the reset token instead of returning it. Hit the stale-`node`-process bug again (killed all node → fresh `npm run dev`). Notes: `notes/15-email-verification.md`.
+- **Day 16:** Security hardening (installed `helmet` + `cors` + `express-rate-limit`; `app.use(helmet())` for secure headers; `app.use(cors({ origin, credentials }))` — noted CORS only affects browsers, Postman ignores it; global limiter 100/15min + strict `authLimiter` 5/15min attached to `/login` → `429` on the 6th attempt; in-memory store resets on restart, prod would use Redis). Notes: `notes/16-security-helmet-cors-rate-limiting.md`.
 
 ## Prisma 7 gotchas (this project uses Prisma 7.8.0 — differs from most tutorials)
 - The DB connection **URL is read in `prisma.config.ts`** (`datasource.url = process.env["DATABASE_URL"]`, and it `import "dotenv/config"`), NOT via a `url = env(...)` line in `schema.prisma`. The schema's `datasource db` block only has `provider = "postgresql"`.

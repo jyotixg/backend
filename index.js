@@ -6,8 +6,32 @@ import jwt from 'jsonwebtoken';
 import { authenticate, authorize } from './authMiddleware.js';
 import crypto from 'crypto';
 import { sendEmail } from './mailer.js';
+import helmet from 'helmet';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 
 const app = express();
+app.use(helmet());
+app.use(cors({
+  origin: 'http://localhost:5173',   // your frontend's origin (adjust as needed)
+  credentials: true,
+}));
+
+// Global: max 100 requests per 15 minutes per IP
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,   // 15 minutes
+  max: 100,
+  message: { error: 'Too many requests, please try again later.' },
+});
+app.use(limiter);
+
+// Strict: max 5 login attempts per 15 minutes per IP
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: 'Too many attempts, please try again later.' },
+});
+
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
@@ -66,7 +90,7 @@ app.post('/register', async (req, res) => {
 });
 
 
-app.post('/login', async (req, res) => {
+app.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
