@@ -14,11 +14,29 @@
       "key": "token",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
     {
       "name": "Health check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
@@ -61,6 +79,29 @@
     },
     {
       "name": "Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const body = pm.response.json();",
+              "",
+              "pm.test('response has an accessToken', function () {",
+              "  pm.expect(body.accessToken).to.be.a('string');",
+              "});",
+              "",
+              "// Auto-save tokens so protected requests use them automatically",
+              "if (body.accessToken) pm.collectionVariables.set('token', body.accessToken);",
+              "if (body.refreshToken) pm.collectionVariables.set('refreshToken', body.refreshToken);"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -89,6 +130,25 @@
     },
     {
       "name": "Current user (/me)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test('returns the user with an email', function () {",
+              "  pm.expect(pm.response.json().email).to.be.a('string');",
+              "});",
+              "pm.test('never leaks the password', function () {",
+              "  pm.expect(pm.response.json()).to.not.have.property('password');",
+              "});"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "auth": {
@@ -175,6 +235,25 @@
     },
     {
       "name": "Refresh access token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "const body = pm.response.json();",
+              "pm.test('response has a new accessToken', function () {",
+              "  pm.expect(body.accessToken).to.be.a('string');",
+              "});",
+              "// Save the refreshed access token for subsequent requests",
+              "if (body.accessToken) pm.collectionVariables.set('token', body.accessToken);"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -185,7 +264,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"refreshToken\": \"PASTE_REFRESH_TOKEN_HERE\"\n}",
+          "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
           "options": {
             "raw": {
               "language": "json"
