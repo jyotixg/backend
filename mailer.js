@@ -12,7 +12,11 @@ async function getTransporter() {
     port: 587,
     secure: false,
     auth: { user: testAccount.user, pass: testAccount.pass },
+    connectionTimeout: 5000,   // give up connecting after 5s
+    greetingTimeout: 5000,
+    socketTimeout: 5000,
   });
+
   return transporter;
 }
 
