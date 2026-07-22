@@ -68,12 +68,16 @@ app.post('/register', async (req, res) => {
 
     // Build a verification link and email it
     const verifyUrl = `http://localhost:${process.env.PORT || 3000}/verify-email?token=${verificationToken}`;
-    await sendEmail({
-      to: email,
-      subject: 'Verify your email',
-      html: `<p>Welcome! Please verify your email by clicking the link below:</p>
-             <a href="${verifyUrl}">${verifyUrl}</a>`,
-    });
+    try {
+      await sendEmail({
+        to: email,
+        subject: 'Verify your email',
+        html: `<p>Welcome! Please verify your email by clicking the link below:</p>
+               <a href="${verifyUrl}">${verifyUrl}</a>`,
+      });
+    } catch (emailErr) {
+      console.error('Verification email failed (continuing anyway):', emailErr.message);
+    }
 
     res.status(201).json({
       id: user.id,
